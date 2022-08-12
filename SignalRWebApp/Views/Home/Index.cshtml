@@ -1,0 +1,114 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+@section Scripts{
+    <script src="~/lib/microsoft-signalr/signalr.js"></script>
+
+    <script>
+        $(document).ready(
+            () => {
+
+                var connection = new signalR.HubConnectionBuilder().withUrl("http://localhost:26990/FirstHub/").build(); //local adresi
+                /* connection.start().then().catch();*/
+                connection.start().then(
+                    () => {
+
+                        connection.invoke("MesajlariGetir");
+
+                        $("#baglantiDurumu").html(connection.state);
+                    }
+
+                ).catch(
+                    (err) => {
+
+                        console.log("HATA OLUŞTU" + err);
+
+                    }
+                );
+
+
+                $("#btnMesajGonder").click(() => {
+
+                    var mesaj = {
+                        Icerik: $("#txtMesaj").val()
+                    };
+
+
+                    connection.invoke("MesajGonder", mesaj);
+
+                });
+
+                connection.on("MesajlariAl", (mesajlar) => {
+
+                    //  $("#MesajListesi").empty();
+                    mesajlar.forEach((item) => {
+
+                        $("#MesajListesi").append("<li class='list-group-item'>" + item.icerik + "</li>")
+                    })
+
+
+                });
+
+                connection.on("MesajAl", (mesaj) => {
+
+                    $("#MesajListesi").append("<li class='list-group-item'>" + mesaj.icerik + "</li>")
+
+                });
+
+                connection.on("BagliKisiSayisiGetir", (BagliKisiSayisi) => {
+
+                    $("#BagliKisiSayisi").html(BagliKisiSayisi);
+
+                });
+
+
+
+            }
+
+
+
+        );
+
+    </script>
+
+}
+
+
+
+<div class="container">
+
+    <div class="row">
+
+        <div class="col-md-8">
+
+            <input class="form-control" type="text" id="txtMesaj" />
+
+            <br>
+
+            <input class="btn btn btn-primary" type="button" id="btnMesajGonder" value="Mesaj Gönder" />
+
+            <div class="alert alert-info">
+                <div class="float-left">
+                    Bağlantı Durumu : <strong id="baglantiDurumu"></strong>
+                    Aktif Client Sayısı : <strong id="BagliKisiSayisi"></strong>
+
+                </div>
+
+
+            </div>
+
+            <div class="col-md-8">
+                <ul id="MesajListesi" class="list-group"></ul>
+
+            </div>
+
+
+
+        </div>
+
+
+    </div>
+
+</div>
